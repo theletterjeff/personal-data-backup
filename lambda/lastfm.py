@@ -4,7 +4,9 @@ from dataclasses import asdict, dataclass, fields
 from datetime import datetime, timedelta
 import io
 import json
+from typing import TypedDict
 
+from aws_lambda_powertools.utilities.typing import LambdaContext
 import boto3
 import requests
 
@@ -20,7 +22,13 @@ class PlayRecord:
     album_id: str
     album_name: str
 
-def handler(event, context):
+class Event(TypedDict):
+    """Both start and end should be UTC timestamps."""
+    start: int
+    end: int
+
+def handler(event: Event, _: LambdaContext):
+    start, end = event["start"], event["end"]
     api_key = get_api_key()
 
     play_records: list[PlayRecord] = []
@@ -28,7 +36,7 @@ def handler(event, context):
 
     while True:
         page_num += 1
-        page = get_page(page_num, api_key)
+        page = get_page(start, end, page_num, api_key)
         records = get_records(page)
 
         if len(records) == 0:
@@ -108,12 +116,11 @@ def parse_data(record) -> PlayRecord:
         album_name = record["album"]["#text"],
     )
 
-def get_page(page_num: int, api_key: str):
+def get_page(start: int, end: int, page_num: int, api_key: str):
     url = "http://ws.audioscrobbler.com/2.0/"
     headers = {
         "User-Agent": "jmartin87-personal-data-backup/v0.0.1",
     }
-    start, end = get_last_month_timestamps()
     params = {
         "method": "user.getrecenttracks",
         "api_key": api_key,
@@ -127,9 +134,9 @@ def get_page(page_num: int, api_key: str):
     resp = requests.get(url=url, headers=headers, params=params)
     return resp.json()
 
-def get_last_month_timestamps():
-    now = datetime.now()
-    start_of_current_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    end_of_last_month = start_of_current_month - timedelta(seconds=1)
-    start_of_last_month = end_of_last_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    return (int(start_of_last_month.timestamp()), int(end_of_last_month.timestamp()))
+# def get_last_month_timestamps():
+#     now = datetime.now()
+#     start_of_current_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+#     end_of_last_month = start_of_current_month - timedelta(seconds=1)
+#     start_of_last_month = end_of_last_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+#     return (int(start_of_last_month.timestamp()), int(end_of_last_month.timestamp()))
