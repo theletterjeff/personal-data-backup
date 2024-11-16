@@ -48,7 +48,8 @@ def handler(event: Event, _: LambdaContext):
 
     csv_str = get_csv_str(play_records)
     gzipped_csv = get_gzipped_csv(csv_str)
-    write_to_s3(gzipped_csv)
+    filename = f'{start}_{end}.csv.gz'
+    write_to_s3(gzipped_csv, filename)
 
 def get_api_key():
     secret_name = "personal-backup-keys"
@@ -83,10 +84,10 @@ def get_gzipped_csv(csv_content: str) -> io.BytesIO:
     gzipped_csv.seek(0)
     return gzipped_csv
 
-def write_to_s3(gzipped_csv: io.BytesIO) -> None:
+def write_to_s3(gzipped_csv: io.BytesIO, filename: str) -> None:
     s3_client = boto3.client("s3")
     s3_bucket = "personaldatabackupstack-backupbucket26b8e51c-lvvadbyuciqx"
-    s3_key = f"lastfm/{datetime.now().timestamp()}.csv.gz"
+    s3_key = f"lastfm/{filename}"
     s3_response = s3_client.put_object(
         Bucket=s3_bucket,
         Key=s3_key,
@@ -104,7 +105,6 @@ def get_records(page):
     return page["recenttracks"]["track"]
 
 def parse_data(record) -> PlayRecord:
-    print(record)
     return PlayRecord(
         date_timestamp = record["date"]["uts"],
         date_readable = record["date"]["#text"],
@@ -133,10 +133,3 @@ def get_page(start: int, end: int, page_num: int, api_key: str):
     }
     resp = requests.get(url=url, headers=headers, params=params)
     return resp.json()
-
-# def get_last_month_timestamps():
-#     now = datetime.now()
-#     start_of_current_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-#     end_of_last_month = start_of_current_month - timedelta(seconds=1)
-#     start_of_last_month = end_of_last_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-#     return (int(start_of_last_month.timestamp()), int(end_of_last_month.timestamp()))
