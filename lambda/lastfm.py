@@ -51,6 +51,16 @@ def handler(event: Event, _: LambdaContext):
     filename = f'{start}_{end}.csv.gz'
     write_to_s3(gzipped_csv, filename)
 
+    return {
+        "status_code": 200,
+        "headers": {
+            "Content-Type": "application/json",
+        },
+        "body": json.dumps({
+            "filesize": len(csv_str),
+        }),
+    }
+
 def get_api_key():
     secret_name = "personal-backup-keys"
     region_name = "us-east-1"
