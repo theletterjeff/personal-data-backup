@@ -54,10 +54,23 @@ export class PersonalDataBackupStack extends Stack {
 
 function getLastMonthTimestamps(): { start: number; end: number } {
   const now = new Date();
-  const startOfCurrentMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
-  const endOfLastMonth = new Date(startOfCurrentMonth.getTime() - 1000); // Subtract 1 second to get to the last month in UTC
-  const startOfLastMonth = new Date(Date.UTC(endOfLastMonth.getUTCFullYear(), endOfLastMonth.getUTCMonth(), 1, 0, 0, 0, 0));
-
+  const startOfCurrentMonth = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      1,
+      0, 0, 0, 0,
+    ),
+  );
+  const endOfLastMonth = new Date(startOfCurrentMonth.getTime() - 1000);
+  const startOfLastMonth = new Date(
+    Date.UTC(
+      endOfLastMonth.getUTCFullYear(),
+      endOfLastMonth.getUTCMonth(),
+      1,
+      0, 0, 0, 0,
+    ),
+  );
   return {
     start: Math.floor(startOfLastMonth.getTime() / 1000),
     end: Math.floor(endOfLastMonth.getTime() / 1000)
