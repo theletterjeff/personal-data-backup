@@ -9,11 +9,14 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 
 logger = get_logger(__name__)
 
+
 def handler(event: Event, _: LambdaContext):
     start, end = event["start"], event["end"]
     logger.info(
-        (f"backing up data for {unix_time_to_datestring(start)} "
-         f"to {unix_time_to_datestring(end)}")
+        (
+            f"backing up data for {unix_time_to_datestring(start)} "
+            f"to {unix_time_to_datestring(end)}"
+        )
     )
 
     logger.info("starting last fm handler")
@@ -21,6 +24,7 @@ def handler(event: Event, _: LambdaContext):
 
     logger.info("starting toggl handler")
     toggl_handler(start, end)
+
 
 def unix_time_to_datestring(unix_time: int) -> str:
     dt = datetime.fromtimestamp(unix_time)

@@ -7,6 +7,7 @@ from aws_sm import ApiKeyName, get_api_key
 from aws_s3 import upload_records_to_s3
 from handler_types import PlayRecord, Event
 
+
 def lastfm_handler(start: int, end: int) -> dict[str, Any]:
     api_key = get_api_key(ApiKeyName.LAST_FM)
 
@@ -26,9 +27,10 @@ def lastfm_handler(start: int, end: int) -> dict[str, Any]:
             play_records.append(play_record)
 
     s3_key = f"lastfm/{start}_{end}.csv.gz"
-    s3_bucket =  "personaldatabackupstack-backupbucket26b8e51c-lvvadbyuciqx"
+    s3_bucket = "personaldatabackupstack-backupbucket26b8e51c-lvvadbyuciqx"
     fieldnames = [field.name for field in fields(PlayRecord)]
     return upload_records_to_s3(play_records, fieldnames, s3_bucket, s3_key)
+
 
 def get_page(start: int, end: int, page_num: int, api_key: str):
     url = "http://ws.audioscrobbler.com/2.0/"
@@ -48,17 +50,19 @@ def get_page(start: int, end: int, page_num: int, api_key: str):
     resp = requests.get(url=url, headers=headers, params=params)
     return resp.json()
 
+
 def get_records(page):
     return page["recenttracks"]["track"]
 
+
 def parse_data(record) -> PlayRecord:
     return PlayRecord(
-        date_timestamp = record["date"]["uts"],
-        date_readable = record["date"]["#text"],
-        artist_id = record["artist"]["mbid"],
-        artist_name = record["artist"]["#text"],
-        track_id = record["mbid"],
-        track_name = record["name"],
-        album_id = record["album"]["mbid"],
-        album_name = record["album"]["#text"],
+        date_timestamp=record["date"]["uts"],
+        date_readable=record["date"]["#text"],
+        artist_id=record["artist"]["mbid"],
+        artist_name=record["artist"]["#text"],
+        track_id=record["mbid"],
+        track_name=record["name"],
+        album_id=record["album"]["mbid"],
+        album_name=record["album"]["#text"],
     )
