@@ -33,9 +33,3 @@ class TimeEntry:
     project_id: int
     tag_ids: list[int]
     tags: list[str]
-
-
-@dataclass(frozen=True)
-class Project:
-    id: int
-    name: str
