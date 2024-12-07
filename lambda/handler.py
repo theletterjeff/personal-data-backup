@@ -1,13 +1,14 @@
 from datetime import datetime
+import logging
 
 from handler_types import Event
 from lastfm import lastfm_handler
-from logger import get_logger
 from toggl import toggl_handler
 
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
-logger = get_logger(__name__)
+logger = logging.getLogger()
+logger.setLevel(level=logging.INFO)
 
 
 def handler(event: Event, _: LambdaContext):
