@@ -17,3 +17,19 @@ class PlayRecord:
     track_name: str
     album_id: str
     album_name: str
+
+@dataclass(frozen=True)
+class TimeEntry:
+    id: int
+    description: str
+    duration: int
+    start: str # UTC
+    stop: str # UTC
+    project_id: int
+    tag_ids: list[int]
+    tags: list[str]
+
+@dataclass(frozen=True)
+class Project:
+    id: int
+    name: str

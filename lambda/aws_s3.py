@@ -7,10 +7,8 @@ from typing import Any
 
 import boto3
 
-from lastfm_types import PlayRecord
-
 def upload_records_to_s3(
-        records: list[PlayRecord],
+        records: list[Any],
         fieldnames: list[str],
         s3_bucket: str,
         s3_key: str,

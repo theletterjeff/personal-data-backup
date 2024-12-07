@@ -1,15 +1,13 @@
 from dataclasses import fields
 from typing import Any
 
-from aws_lambda_powertools.utilities.typing import LambdaContext
 import requests
 
 from aws_sm import ApiKeyName, get_api_key
 from aws_s3 import upload_records_to_s3
-from lastfm_types import PlayRecord, Event
+from handler_types import PlayRecord, Event
 
-def handler(event: Event, _: LambdaContext) -> dict[str, Any]:
-    start, end = event["start"], event["end"]
+def lastfm_handler(start: int, end: int) -> dict[str, Any]:
     api_key = get_api_key(ApiKeyName.LAST_FM)
 
     play_records: list[PlayRecord] = []
