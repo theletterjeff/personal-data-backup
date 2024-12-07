@@ -23,8 +23,8 @@ export class PersonalDataBackupStack extends Stack {
           ],
         },
       }),
-      handler: "lastfm.handler",
-      timeout: Duration.minutes(5),
+      handler: "handler.handler",
+      timeout: Duration.minutes(10),
     });
 
     // for API keys
