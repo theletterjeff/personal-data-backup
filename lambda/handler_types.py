@@ -31,5 +31,6 @@ class TimeEntry:
     start: str  # UTC
     stop: str  # UTC
     project_id: int
+    project_name: str
     tag_ids: list[int]
     tags: list[str]
