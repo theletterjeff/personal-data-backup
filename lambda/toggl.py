@@ -1,19 +1,44 @@
-from dataclasses import fields
+from dataclasses import dataclass, fields
 from datetime import datetime, UTC
-from typing import Any
+import logging
 
 import requests
+from aws_lambda_powertools.utilities.typing import LambdaContext
 
-from aws_sm import ApiKeyName, get_api_key
-from aws_s3 import upload_records_to_s3
-from handler_types import TimeEntry
+from aws.sm import ApiKeyName, get_api_key
+from aws.s3 import upload_records_to_s3
+from aws.lambdas import Event
+
+logger = logging.getLogger()
+logger.setLevel(level=logging.INFO)
 
 url_root = "https://api.track.toggl.com/api/v9"
 workspace_id = 2623046
 headers = {"User-Agent": "jmartin-personal-data-backup/v0.0.1"}
 
 
-def toggl_handler(start: int, end: int) -> dict[str, Any]:
+@dataclass(frozen=True)
+class TimeEntry:
+    id: int
+    description: str
+    duration: int
+    start: str  # UTC
+    stop: str  # UTC
+    project_id: int
+    project_name: str
+    tag_ids: list[int]
+    tags: list[str]
+
+
+def handler(event: Event, _: LambdaContext):
+    start, end = event["start"], event["end"]
+    logger.info(
+        (
+            f"backing up data for {unix_time_to_datestring(start)} "
+            f"to {unix_time_to_datestring(end)}"
+        )
+    )
+
     api_key = get_api_key(ApiKeyName.TOGGL)
 
     projects = {p["id"]: p["name"] for p in get_projects(api_key)}
@@ -25,6 +50,11 @@ def toggl_handler(start: int, end: int) -> dict[str, Any]:
     s3_bucket = "personaldatabackupstack-backupbucket26b8e51c-lvvadbyuciqx"
     fieldnames = [field.name for field in fields(TimeEntry)]
     return upload_records_to_s3(time_entries, fieldnames, s3_bucket, s3_key)
+
+
+def unix_time_to_datestring(unix_time: int) -> str:
+    dt = datetime.fromtimestamp(unix_time)
+    return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def get_projects(api_key: str):

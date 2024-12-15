@@ -1,14 +1,41 @@
-from dataclasses import fields
-from typing import Any
+from datetime import datetime
+from dataclasses import dataclass, fields
+import logging
 
 import requests
+from aws_lambda_powertools.utilities.typing import LambdaContext
 
-from aws_sm import ApiKeyName, get_api_key
-from aws_s3 import upload_records_to_s3
-from handler_types import PlayRecord, Event
+from aws.sm import ApiKeyName, get_api_key
+from aws.s3 import upload_records_to_s3
+from aws.lambdas import Event
+
+logger = logging.getLogger()
+logger.setLevel(level=logging.INFO)
 
 
-def lastfm_handler(start: int, end: int) -> dict[str, Any]:
+@dataclass(frozen=True)
+class PlayRecord:
+    """IDs are MusicBrainz IDs"""
+
+    date_timestamp: int
+    date_readable: str
+    artist_id: str
+    artist_name: str
+    track_id: str
+    track_name: str
+    album_id: str
+    album_name: str
+
+
+def handler(event: Event, _: LambdaContext):
+    start, end = event["start"], event["end"]
+    logger.info(
+        (
+            f"backing up data for {unix_time_to_datestring(start)} "
+            f"to {unix_time_to_datestring(end)}"
+        )
+    )
+
     api_key = get_api_key(ApiKeyName.LAST_FM)
 
     play_records: list[PlayRecord] = []
@@ -30,6 +57,11 @@ def lastfm_handler(start: int, end: int) -> dict[str, Any]:
     s3_bucket = "personaldatabackupstack-backupbucket26b8e51c-lvvadbyuciqx"
     fieldnames = [field.name for field in fields(PlayRecord)]
     return upload_records_to_s3(play_records, fieldnames, s3_bucket, s3_key)
+
+
+def unix_time_to_datestring(unix_time: int) -> str:
+    dt = datetime.fromtimestamp(unix_time)
+    return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def get_page(start: int, end: int, page_num: int, api_key: str):
